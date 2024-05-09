@@ -1,12 +1,11 @@
 #include <iostream>
+#include <stdexcept>
 #include <vector>
-#include <cassert>
-#pragma once 
+#include <algorithm>
 
 template<typename T>
 class NaryTree {
 public:
-///а дальше костыль с Нодой
     struct Node {
         T data;
         std::vector<Node*> children;
@@ -36,19 +35,20 @@ public:
         delete node;
     }
 
-    void insertHelper(Node* node, const T& parentVal, const T& val) {
+    void insertHelper(Node* node, const T& val) {
         if (node == nullptr) {
             return;
         }
 
-        if (node->data == parentVal) {
-            node->children.push_back(new Node(val));
+        if (val < node->data) {
+            node->children.insert(node->children.begin(), new Node(val));
             return;
         }
 
-        for (Node* child : node->children) {
-            insertHelper(child, parentVal, val);
-        }
+        auto it = std::upper_bound(node->children.begin(), node->children.end(), val,
+            [](const T& a, const Node* b) { return a < b->data; });
+
+        node->children.insert(it, new Node(val));
     }
 
     void removeNode(Node* parent, Node* target) {
@@ -56,14 +56,11 @@ public:
             return;
         }
 
-        auto it = parent->children.begin();
-        while (it != parent->children.end()) {
-            if (*it == target) {
-                deleteSubtree(*it);
-                it = parent->children.erase(it);
-                return;
-            }
-            ++it;
+        auto it = std::find(parent->children.begin(), parent->children.end(), target);
+        if (it != parent->children.end()) {
+            deleteSubtree(*it);
+            parent->children.erase(it);
+            return;
         }
 
         for (Node* child : parent->children) {
@@ -77,18 +74,17 @@ public:
         deleteSubtree(root);
     }
 
-    void insert(const T& parentVal, const T& val) {
+    void insert(const T& val) {
         if (root == nullptr) {
-            root = new Node(parentVal);
-            root->children.push_back(new Node(val));
+            root = new Node(val);
         } 
         else {
-            insertHelper(root, parentVal, val);
+            insertHelper(root, val);
         }
     }
 
-    Node* find(const T& val) {
-        return findNode(root, val);
+    bool contains(const T& val) {
+        return findNode(root, val) != nullptr;
     }
 
     void remove(const T& val) {
@@ -96,23 +92,26 @@ public:
             return;
         }
 
-        if (root->data == val) {
-            deleteSubtree(root);
-            root = nullptr;
+        removeNode(root, findNode(root, val));
+    }
+
+    std::vector<T> getSortedElements() {
+        std::vector<T> elements;
+        getSortedElementsHelper(root, elements);
+        std::sort(elements.begin(), elements.end()); // Тупая сортировка элементов
+        return elements;
+    }
+
+private:
+    void getSortedElementsHelper(Node* node, std::vector<T>& elements) {
+        if (node == nullptr) {
             return;
         }
 
-        removeNode(root, find(val));
-    }
-
-    NaryTree* extractSubtree(const T& val) {
-        Node* target = find(val);
-        if (target == nullptr) {
-            return nullptr;
+        for (Node* child : node->children) {
+            getSortedElementsHelper(child, elements);
         }
-        NaryTree* subtree = new NaryTree;
-        subtree->root = target;
-        remove(val);
-        return subtree;
+
+        elements.push_back(node->data);
     }
 };
