@@ -1,13 +1,14 @@
 #include "set.h"
 #include <cassert>
 
+//убрать наследование (сделано), Set композировал дерева, починить принт на поэлементное действие через енумерацию
 void testRBTree() {
     RB_Tree<int> tree;
 
     assert(tree.GetLength() == 0);
-    tree.Append(10);
-    tree.Append(20);
-    tree.Append(30);
+    tree.Add(10);
+    tree.Add(20);
+    tree.Add(30);
     assert(tree.GetLength() == 3);
 
     assert(tree.GetFirst() == 10);
@@ -20,7 +21,7 @@ void testRBTree() {
     assert(tree[1] == 20);
     assert(tree[2] == 30);
 
-    tree.Prepend(5);
+    tree.Add(5);
     assert(tree.GetLength() == 4);
     assert(tree.GetFirst() == 5);
     assert(tree.Get(0) == 5);
@@ -28,8 +29,12 @@ void testRBTree() {
     assert(tree.Get(2) == 20);
     assert(tree.Get(3) == 30);
 
+    RB_Tree<std::string> tree_char;
+    tree_char.Add("This is fine");
+    (tree_char.Get(0) == "This is fine"); 
+
     std::cout << "Все тесты для дерева, содержащего элементы ";
-    tree.PrintTree();
+    std::cout << tree.PrintTree() << std::endl;
     std::cout << "пройдены успешно!" << std::endl;
 
 
@@ -39,34 +44,31 @@ void testRBTreeSet() {
     RB_Tree_Set<int> set1;
     RB_Tree_Set<int> set2;
 
-    // Тест Append и Contains
-    set1.Append(10);
-    set1.Append(20);
-    set1.Append(30);
+    set1.Add(10);
+    set1.Add(20);
+    set1.Add(30);
     assert(set1.Contains(10));
     assert(set1.Contains(20));
     assert(set1.Contains(30));
     assert(!set1.Contains(40));
 
-    set2.Append(20);
-    set2.Append(30);
-    set2.Append(40);
+    set2.Add(20);
+    set2.Add(30);
+    set2.Add(40);
     assert(set2.Contains(20));
     assert(set2.Contains(30));
     assert(set2.Contains(40));
     assert(!set2.Contains(10));
 
-    // Тест Union
     set1.Union(set2);
     assert(set1.Contains(10));
     assert(set1.Contains(20));
     assert(set1.Contains(30));
     assert(set1.Contains(40));
 
-    // Тест оператора +
     RB_Tree_Set<int> set3;
-    set3.Append(50);
-    set3.Append(60);
+    set3.Add(50);
+    set3.Add(60);
     RB_Tree_Set<int> resultSet = set1;
     resultSet += set3;
     assert(resultSet.Contains(10));
@@ -76,18 +78,17 @@ void testRBTreeSet() {
     assert(resultSet.Contains(50));
     assert(resultSet.Contains(60));
 
-    // Тест Difference
     RB_Tree_Set<int> set4;
     RB_Tree_Set<int> set5;
 
-    set4.Append(30);
-    set4.Append(10);
-    set4.Append(20);
-    set4.Append(30);
+    set4.Add(30);
+    set4.Add(10);
+    set4.Add(20);
+    set4.Add(30);
 
-    set5.Append(20);
-    set5.Append(50);
-    set5.Append(40);
+    set5.Add(20);
+    set5.Add(50);
+    set5.Add(40);
 
     RB_Tree_Set<int> intersectionSet = set1.Intersection(set2);
     RB_Tree_Set<int> differenceSet = set1.Difference(set2);

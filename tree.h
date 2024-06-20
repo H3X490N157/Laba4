@@ -1,16 +1,17 @@
 #include <cassert>
 #include <stack>
 #include <iostream>
+#include <sstream>
 
 #include "sequence.h"
 #include "node.h"
 
 template <typename T>
-class RB_Tree : public Sequence<T> {
-protected:
+class RB_Tree {
+public:
     Node<T>* root;
-    int length;
-
+    int length; 
+private:
     void RotateLeft(Node<T>*&);
     void RotateRight(Node<T>*&);
     void FixInsert(Node<T>*&);
@@ -20,18 +21,34 @@ protected:
     void DeleteNode(Node<T>* node);
     void PrintHelper(Node<T>* node);
 
+
 public:
     RB_Tree();
     ~RB_Tree();
     
-    T& GetFirst() override;
-    T& GetLast() override;
-    T& Get(int index) override;
-    T& operator[](int index) override;
-    int GetLength() override;
-    void Append(const T& item) override;
-    void Prepend(const T& item) override;
-    void PrintTree();
+    T& GetFirst();
+    T& GetLast();
+    T& Get(int index);
+    T& operator[](int index);
+    int GetLength() ;
+    void Add(const T& item);
+    std::string PrintTree();
+
+    class Enumerator {
+    private:
+        Node<T>* current;
+        std::stack<Node<T>*> nodes;
+
+    public:
+        Enumerator(Node<T>* root);
+        bool HasNext();
+        T& Next();
+    };
+
+    Enumerator GetEnumerator() {
+        return Enumerator(root);
+    }
+
 };
 
 template <typename T>
@@ -79,7 +96,7 @@ int RB_Tree<T>::GetLength() {
 }
 
 template <typename T>
-void RB_Tree<T>::Append(const T& item) {
+void RB_Tree<T>::Add(const T& item) {
     Node<T>* newNode = new Node<T>(item);
     if (root == nullptr) {
         newNode->color = BLACK;
@@ -104,11 +121,6 @@ void RB_Tree<T>::Append(const T& item) {
         FixInsert(newNode);
     }
     length++;
-}
-
-template <typename T>
-void RB_Tree<T>::Prepend(const T& item) {
-    Append(item);  // для красно-чёрного дерева Append и Prepend могут быть идентичны
 }
 
 template <typename T>
@@ -228,18 +240,56 @@ Node<T>* RB_Tree<T>::GetNode(int index) {
     }
     return nullptr;
 }
-
+//создаём объект (enumerator), посещаем все узлы, выполняем некое действие, которое выполняем, for each do, действие над каждым узлом
 template <typename T>
-void RB_Tree<T>::PrintHelper(Node<T>* node) {
-    if (node == nullptr) {
-        return;
+RB_Tree<T>::Enumerator::Enumerator(Node<T>* root) : current(root) {
+    while (current != nullptr) {
+        nodes.push(current);
+        current = current->left;
     }
-    PrintHelper(node->left);
-    std::cout << node->data << " ";
-    PrintHelper(node->right);
+    if (!nodes.empty()) {
+        current = nodes.top();
+        nodes.pop();
+    }
 }
 
 template <typename T>
-void RB_Tree<T>::PrintTree() {
-    PrintHelper(root);
+bool RB_Tree<T>::Enumerator::HasNext() {
+    return current != nullptr;
+}
+
+template <typename T>
+T& RB_Tree<T>::Enumerator::Next() {
+    if (current == nullptr) {
+        throw std::out_of_range("No more elements");
+    }
+    Node<T>* node = current;
+    if (!nodes.empty() || current->right != nullptr) {
+        current = current->right;
+        while (current != nullptr) {
+            nodes.push(current);
+            current = current->left;
+        }
+        if (!nodes.empty()) {
+            current = nodes.top();
+            nodes.pop();
+        }
+    } else {
+        current = nullptr;
+    }
+    return node->data;
+}
+
+template <typename T>
+std::string RB_Tree<T>::PrintTree() {
+    std::ostringstream oss;
+    Enumerator enumerator = GetEnumerator();
+    while (enumerator.HasNext()) {
+        oss << enumerator.Next() << " ";
+    }
+    std::string result = oss.str();
+    if (!result.empty()) {
+        result.pop_back();
+    }
+    return result;
 }

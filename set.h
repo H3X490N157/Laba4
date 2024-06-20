@@ -1,25 +1,35 @@
 #include "tree.h"
 
 template <typename T>
-class RB_Tree_Set : public RB_Tree<T> {
-public:
+class RB_Tree_Set {
+private:
+    RB_Tree<T> tree;
 
+public:
     bool Contains(T item);
 
-    void Append(const T& item) override;
+    void Add(const T& item);
 
     void Union(RB_Tree_Set<T>& otherSet);
 
     void operator+=(RB_Tree_Set<T>& otherSet);
 
+    void operator-=(RB_Tree_Set<T>& otherSet);
+
     RB_Tree_Set<T> Intersection(RB_Tree_Set<T>& otherSet);
 
     RB_Tree_Set<T> Difference(RB_Tree_Set<T>& otherSet);
+
+    int GetLength();
+
+    T& Get(int index);
+
+    T& operator[](int index);
 };
 
 template <typename T>
 bool RB_Tree_Set<T>::Contains(T item) {
-    Node<T>* current = this->root;
+    Node<T>* current = tree.root;
 
     while (current != nullptr) {
         if (item == current->data) {
@@ -35,8 +45,8 @@ bool RB_Tree_Set<T>::Contains(T item) {
 }
 
 template <typename T>
-void RB_Tree_Set<T>::Append(const T& item) {
-    Node<T>* current = this->root;
+void RB_Tree_Set<T>::Add(const T& item) {
+    Node<T>* current = tree.root;
     while (current != nullptr) {
         if (item == current->data) {
             return;
@@ -55,7 +65,7 @@ void RB_Tree_Set<T>::Append(const T& item) {
         }
     }
 
-    RB_Tree<T>::Append(item);
+    tree.Add(item);
 }
 
 template <typename T>
@@ -63,7 +73,7 @@ void RB_Tree_Set<T>::Union(RB_Tree_Set<T>& otherSet) {
     int x = otherSet.GetLength();
     for (int i = 0; i < x; ++i) {
         const T& item = otherSet[i];
-        this->Append(item);  
+        this->Add(item);  
     }
 }
 
@@ -77,9 +87,9 @@ RB_Tree_Set<T> RB_Tree_Set<T>::Intersection(RB_Tree_Set<T>& otherSet) {
     RB_Tree_Set<T> result;
     int x = this->GetLength();
     for (int i = 0; i < x; ++i) {
-        const T& item = this->Get(i);
+        const T& item = this->operator[](i);
         if (otherSet.Contains(item)) {
-            result.Append(item);
+            result.Add(item);
         }
     }
 
@@ -91,11 +101,31 @@ RB_Tree_Set<T> RB_Tree_Set<T>::Difference(RB_Tree_Set<T>& otherSet) {
     RB_Tree_Set<T> result;
     int x = this->GetLength();
     for (int i = 0; i < x; ++i) {
-        const T& item = this->Get(i);
+        const T& item = this->operator[](i);
         if (!otherSet.Contains(item)) {
-            result.Append(item);
+            result.Add(item);
         }
     }
 
     return result;
+}
+
+template <typename T>
+void RB_Tree_Set<T>::operator-=(RB_Tree_Set<T>& otherSet) {
+    *this = this->Difference(otherSet);
+}
+
+template <typename T>
+int RB_Tree_Set<T>::GetLength() {
+    return tree.GetLength();
+}
+
+template <typename T>
+T& RB_Tree_Set<T>::operator[](int index) {
+    return tree.Get(index);
+}
+
+template <typename T>
+T& RB_Tree_Set<T>::Get(int index) {
+    return tree.Get(index);
 }
