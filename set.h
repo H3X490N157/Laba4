@@ -1,35 +1,101 @@
-#pragma once
-#include "nary_tree.h"
+#include "tree.h"
 
-template<typename T>
-class Set {
-private:
-    NaryTree<T> tree;
-
+template <typename T>
+class RB_Tree_Set : public RB_Tree<T> {
 public:
-    bool contains(const T& val) {
-        return tree.contains(val);
-    }
 
-    void insert(const T& val) {
-        if (!tree.contains(val)){
-            tree.insert(val);
-        }
-    }
+    bool Contains(T item);
 
-    void remove(const T& val) {
-        tree.remove(val);
-    }
+    void Append(const T& item) override;
 
-    T find(size_t index) {
-        std::vector<T> sortedElements = tree.getSortedElements();
-        if (index >= sortedElements.size()) {
-            throw std::out_of_range("Некорректный индекс");
-        }
-        return sortedElements[index];
-    }
+    void Union(RB_Tree_Set<T>& otherSet);
 
-    T operator[](size_t index) {
-        return find(index);
-    }
+    void operator+=(RB_Tree_Set<T>& otherSet);
+
+    RB_Tree_Set<T> Intersection(RB_Tree_Set<T>& otherSet);
+
+    RB_Tree_Set<T> Difference(RB_Tree_Set<T>& otherSet);
 };
+
+template <typename T>
+bool RB_Tree_Set<T>::Contains(T item) {
+    Node<T>* current = this->root;
+
+    while (current != nullptr) {
+        if (item == current->data) {
+            return true;
+        } else if (item < current->data) {
+            current = current->left;
+        } else {
+            current = current->right;
+        }
+    }
+
+    return false;
+}
+
+template <typename T>
+void RB_Tree_Set<T>::Append(const T& item) {
+    Node<T>* current = this->root;
+    while (current != nullptr) {
+        if (item == current->data) {
+            return;
+        } else if (item < current->data) {
+            if (current->left == nullptr) {
+                break;
+            } else {
+                current = current->left;
+            }
+        } else {
+            if (current->right == nullptr) {
+                break;
+            } else {
+                current = current->right;
+            }
+        }
+    }
+
+    RB_Tree<T>::Append(item);
+}
+
+template <typename T>
+void RB_Tree_Set<T>::Union(RB_Tree_Set<T>& otherSet) {
+    int x = otherSet.GetLength();
+    for (int i = 0; i < x; ++i) {
+        const T& item = otherSet[i];
+        this->Append(item);  
+    }
+}
+
+template <typename T>
+void RB_Tree_Set<T>::operator+=(RB_Tree_Set<T>& otherSet) {
+    this->Union(otherSet);
+}
+
+template <typename T>
+RB_Tree_Set<T> RB_Tree_Set<T>::Intersection(RB_Tree_Set<T>& otherSet) {
+    RB_Tree_Set<T> result;
+    int x = this->GetLength();
+    for (int i = 0; i < x; ++i) {
+        const T& item = this->Get(i);
+        if (otherSet.Contains(item)) {
+            result.Append(item);
+        }
+    }
+
+    return result;
+}
+
+template <typename T>
+RB_Tree_Set<T> RB_Tree_Set<T>::Difference(RB_Tree_Set<T>& otherSet) {
+    RB_Tree_Set<T> result;
+    int x = this->GetLength();
+    for (int i = 0; i < x; ++i) {
+        const T& item = this->Get(i);
+        if (!otherSet.Contains(item)) {
+            result.Append(item);
+        }
+    }
+
+    return result;
+}

@@ -1,36 +1,24 @@
-#include "sequence.h"
-#include <iostream>
+#include <cassert>
 #include <stack>
+#include <iostream>
 
-enum Color { RED, BLACK };
-
-template <typename T>
-struct Node {
-    T data;
-    Color color;
-    Node<T>* left;
-    Node<T>* right;
-    Node<T>* parent;
-
-    Node(T data): data(data), color(RED), left(nullptr), right(nullptr), parent(nullptr) {}
-};
+#include "sequence.h"
+#include "node.h"
 
 template <typename T>
 class RB_Tree : public Sequence<T> {
-private:
+protected:
     Node<T>* root;
     int length;
 
     void RotateLeft(Node<T>*&);
     void RotateRight(Node<T>*&);
     void FixInsert(Node<T>*&);
-    void Transplant(Node<T>*, Node<T>*);
-    void DeleteFix(Node<T>*);
     Node<T>* Minimum(Node<T>* node);
     Node<T>* Maximum(Node<T>* node);
     Node<T>* GetNode(int index);
     void DeleteNode(Node<T>* node);
-    void InOrderPrint(Node<T>* node);
+    void PrintHelper(Node<T>* node);
 
 public:
     RB_Tree();
@@ -120,7 +108,7 @@ void RB_Tree<T>::Append(const T& item) {
 
 template <typename T>
 void RB_Tree<T>::Prepend(const T& item) {
-    Append(item);  // Для красно-чёрного дерева Append и Prepend могут быть идентичны
+    Append(item);  // для красно-чёрного дерева Append и Prepend могут быть идентичны
 }
 
 template <typename T>
@@ -242,17 +230,16 @@ Node<T>* RB_Tree<T>::GetNode(int index) {
 }
 
 template <typename T>
-void RB_Tree<T>::InOrderPrint(Node<T>* node) {
+void RB_Tree<T>::PrintHelper(Node<T>* node) {
     if (node == nullptr) {
         return;
     }
-    InOrderPrint(node->left);
+    PrintHelper(node->left);
     std::cout << node->data << " ";
-    InOrderPrint(node->right);
+    PrintHelper(node->right);
 }
 
 template <typename T>
 void RB_Tree<T>::PrintTree() {
-    InOrderPrint(root);
-    std::cout << std::endl;
+    PrintHelper(root);
 }
